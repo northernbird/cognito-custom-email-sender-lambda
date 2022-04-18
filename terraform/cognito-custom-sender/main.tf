@@ -181,24 +181,33 @@ provider "aws" {
 #  source_arn = aws_cognito_user_pool.cognito_user_pool.arn
 #}
 
-#locals {
-#  custom_sms_sender_lambda = "MyntJpSMSSenderFunction"
-#  custom_sms_sender_alias  = "MyntJpSMSSenderFunction"
-#}
-#
-#data "aws_lambda_alias" "custom_sms_sender" {
-#  name          = local.custom_sms_sender_alias
+locals {
+  custom_sms_sender_lambda = "MyntJpSMSSenderFunction"
+  custom_sms_sender_alias  = "MyntJpSMSSenderFunction"
+}
+
+data "aws_lambda_alias" "custom_sms_sender" {
+  name          = local.custom_sms_sender_alias
+  function_name = local.custom_sms_sender_lambda
+}
+
+data "aws_lambda_function" "custom_sms_sender_function" {
 #  function_name = local.custom_sms_sender_lambda
-#}
+  function_name = "MyntJpSMSSenderFunctionTest"
+}
 
 locals {
-  custom_sms_sender_lambda = "arn:aws:lambda:ap-northeast-1:420903242724:function:mynt-jp-sms-sender-lambda-s-myntCustomSMSSenderSam-RIWc0YeBYhdQ"
+#  custom_sms_sender_lambda_full_arn = "arn:aws:lambda:ap-northeast-1:420903242724:function:mynt-jp-sms-sender-lambda-s-myntCustomSMSSenderSam-RIWc0YeBYhdQ"
+  custom_sms_sender_lambda_full_arn = "arn:aws:lambda:ap-northeast-1:420903242724:function:MyntJpSMSSenderFunction"
   kms_key  = "arn:aws:kms:ap-northeast-1:420903242724:key/f0b22564-1667-43d3-a9d9-c87fb713591c"
   cognito_id = "ap-northeast-1_pYUwr1ixO"
 }
 
 locals {
-  update_user_pool_command = "aws cognito-idp update-user-pool --user-pool-id ${local.cognito_id} --lambda-config \"CustomSMSSender={LambdaVersion=V1_0,LambdaArn=${local.custom_sms_sender_lambda}},KMSKeyID=${local.kms_key}\""
+#  update_user_pool_command = "aws cognito-idp update-user-pool --user-pool-id ${local.cognito_id} --lambda-config \"CustomSMSSender={LambdaVersion=V1_0,LambdaArn=${local.custom_sms_sender_lambda_full_arn}},KMSKeyID=${local.kms_key}\""
+  update_user_pool_command = "aws cognito-idp update-user-pool --user-pool-id ${local.cognito_id} --lambda-config \"CustomSMSSender={LambdaVersion=V1_0,LambdaArn=${data.aws_lambda_alias.custom_sms_sender.arn}},KMSKeyID=${local.kms_key}\""
+#  update_user_pool_command = "aws cognito-idp update-user-pool --user-pool-id ${local.cognito_id} --lambda-config \"CustomSMSSender={LambdaVersion=V1_0,LambdaArn=${data.aws_lambda_function.custom_sms_sender_function.arn}},KMSKeyID=${local.kms_key}\""
+
 }
 
 resource "null_resource" "cognito_user_pool_lambda_config" {
